@@ -11,7 +11,7 @@ import {
   Shield, 
   Clock,
   ChevronDown,
-  Infinity
+  Infinity as InfinityIcon
 } from "lucide-react";
 
 const SwapInterface = () => {
@@ -49,7 +49,7 @@ const SwapInterface = () => {
           <h2 className="text-xl font-bold">Cross-Chain Swap</h2>
           <div className="flex items-center gap-2">
             <Badge variant="secondary" className="flex items-center gap-1">
-              <Infinity className="w-3 h-3" />
+              <InfinityIcon className="w-3 h-3" />
               1inch Fusion+
             </Badge>
             <Button variant="ghost" size="sm">
