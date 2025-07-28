@@ -41,7 +41,7 @@ const WalletDashboard = ({ walletAddress, onDisconnect }: WalletDashboardProps) 
         <div className="max-w-6xl mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <div className="w-10 h-10 bg-gradient-primary rounded-full flex items-center justify-center">
+              <div className="w-10 h-10 bg-primary rounded-full flex items-center justify-center">
                 <Wallet className="w-5 h-5 text-primary-foreground" />
               </div>
               <div>
@@ -95,7 +95,7 @@ const WalletDashboard = ({ walletAddress, onDisconnect }: WalletDashboardProps) 
               network="TON"
             />
             
-            <Card className="p-4 bg-gradient-card border border-border/50">
+            <Card className="p-4 bg-card border border-border">
               <div className="text-center">
                 <div className="text-2xl font-bold">
                   ${(balances.eth.usd + balances.ton.usd).toLocaleString()}

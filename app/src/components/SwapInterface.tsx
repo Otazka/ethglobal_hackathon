@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,7 +11,10 @@ import {
   Shield, 
   Clock,
   ChevronDown,
-  Infinity as InfinityIcon
+  Infinity as InfinityIcon,
+  TrendingUp,
+  AlertCircle,
+  CheckCircle
 } from "lucide-react";
 
 const SwapInterface = () => {
@@ -20,12 +23,14 @@ const SwapInterface = () => {
   const [fromToken, setFromToken] = useState("ETH");
   const [toToken, setToToken] = useState("TON");
   const [slippage, setSlippage] = useState(0.5);
+  const [isLoading, setIsLoading] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
 
   const tokens = [
-    { symbol: "ETH", name: "Ethereum", icon: "🔷", network: "Ethereum" },
-    { symbol: "TON", name: "Toncoin", icon: "💎", network: "TON" },
-    { symbol: "USDT", name: "Tether", icon: "💵", network: "Both" },
-    { symbol: "WETH", name: "Wrapped ETH", icon: "🔶", network: "Ethereum" }
+    { symbol: "ETH", name: "Ethereum", icon: "🔷", network: "Ethereum", price: 1600 },
+    { symbol: "TON", name: "Toncoin", icon: "💎", network: "TON", price: 31.25 },
+    { symbol: "USDT", name: "Tether", icon: "💵", network: "Both", price: 1.00 },
+    { symbol: "WETH", name: "Wrapped ETH", icon: "🔶", network: "Ethereum", price: 1600 }
   ];
 
   const swapTokens = () => {
@@ -41,8 +46,34 @@ const SwapInterface = () => {
     return tokens.find(t => t.symbol === symbol) || tokens[0];
   };
 
+  const handleSwap = async () => {
+    if (!fromAmount || parseFloat(fromAmount) <= 0) return;
+    
+    setIsLoading(true);
+    // Simulate swap execution
+    await new Promise(resolve => setTimeout(resolve, 2000));
+    
+    console.log("Executing swap:", {
+      from: fromToken,
+      to: toToken,
+      amount: fromAmount
+    });
+    
+    setIsLoading(false);
+    // Reset form after successful swap
+    setFromAmount("");
+    setToAmount("");
+  };
+
+  const formatUSD = (value: number) => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD'
+    }).format(value);
+  };
+
   return (
-    <Card className="p-6 bg-gradient-card border border-border/50">
+    <Card className="p-6 bg-card border border-border">
       <div className="space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between">
@@ -52,11 +83,50 @@ const SwapInterface = () => {
               <InfinityIcon className="w-3 h-3" />
               1inch Fusion+
             </Badge>
-            <Button variant="ghost" size="sm">
+            <Button 
+              variant="ghost" 
+              size="sm"
+              onClick={() => setShowSettings(!showSettings)}
+            >
               <Settings className="w-4 h-4" />
             </Button>
           </div>
         </div>
+
+        {/* Settings Panel */}
+        {showSettings && (
+          <Card className="p-4 bg-muted/30 border border-border">
+            <div className="space-y-3">
+              <h3 className="font-medium">Swap Settings</h3>
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-muted-foreground">Slippage Tolerance</span>
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant={slippage === 0.5 ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setSlippage(0.5)}
+                  >
+                    0.5%
+                  </Button>
+                  <Button
+                    variant={slippage === 1.0 ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setSlippage(1.0)}
+                  >
+                    1.0%
+                  </Button>
+                  <Button
+                    variant={slippage === 2.0 ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setSlippage(2.0)}
+                  >
+                    2.0%
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </Card>
+        )}
 
         {/* From Token */}
         <div className="space-y-2">
@@ -133,43 +203,17 @@ const SwapInterface = () => {
           </Card>
         </div>
 
-        <Separator />
-
-        {/* Swap Details */}
-        <div className="space-y-3">
-          <div className="flex items-center justify-between text-sm">
-            <span className="flex items-center gap-2 text-muted-foreground">
-              <Zap className="w-4 h-4" />
-              Best Route
-            </span>
-            <span className="font-medium">1inch Fusion+</span>
-          </div>
-          
-          <div className="flex items-center justify-between text-sm">
-            <span className="flex items-center gap-2 text-muted-foreground">
-              <Clock className="w-4 h-4" />
-              Estimated Time
-            </span>
-            <span className="font-medium">2-5 minutes</span>
-          </div>
-          
-          <div className="flex items-center justify-between text-sm">
-            <span className="flex items-center gap-2 text-muted-foreground">
-              <Shield className="w-4 h-4" />
-              Slippage Tolerance
-            </span>
-            <Badge variant="secondary">{slippage}%</Badge>
-          </div>
-        </div>
-
         {/* Swap Button */}
         <Button 
-          variant="gradient" 
+          variant="default" 
           size="lg" 
           className="w-full" 
-          disabled={!fromAmount || parseFloat(fromAmount) <= 0}
+          disabled={!fromAmount || parseFloat(fromAmount) <= 0 || isLoading}
+          onClick={handleSwap}
         >
-          {!fromAmount || parseFloat(fromAmount) <= 0 ? (
+          {isLoading ? (
+            "Processing..."
+          ) : !fromAmount || parseFloat(fromAmount) <= 0 ? (
             "Enter Amount"
           ) : (
             `Swap ${fromToken} for ${toToken}`

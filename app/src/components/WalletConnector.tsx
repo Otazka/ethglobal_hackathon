@@ -43,14 +43,14 @@ const WalletConnector = ({ onWalletConnect }: WalletConnectorProps) => {
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
-      <Card className="w-full max-w-md p-8 bg-gradient-card border border-border/50">
+      <Card className="w-full max-w-md p-8 bg-card border border-border">
         <div className="text-center space-y-6">
-          <div className="w-16 h-16 mx-auto bg-gradient-primary rounded-full flex items-center justify-center">
+          <div className="w-16 h-16 mx-auto bg-primary rounded-full flex items-center justify-center">
             <Wallet className="w-8 h-8 text-primary-foreground" />
           </div>
           
           <div className="space-y-2">
-            <h1 className="text-2xl font-bold bg-gradient-primary bg-clip-text text-transparent">
+            <h1 className="text-2xl font-bold text-foreground">
               Cross-Chain Wallet
             </h1>
             <p className="text-muted-foreground">
@@ -62,7 +62,7 @@ const WalletConnector = ({ onWalletConnect }: WalletConnectorProps) => {
             <Button
               onClick={connectMetaMask}
               disabled={connecting}
-              variant="gradient"
+              variant="default"
               size="lg"
               className="w-full"
             >

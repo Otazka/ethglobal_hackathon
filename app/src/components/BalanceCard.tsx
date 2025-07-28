@@ -22,7 +22,7 @@ const BalanceCard = ({
   const isPositive = change24h >= 0;
 
   return (
-    <Card className="p-4 bg-gradient-card border border-border/50 hover:border-primary/30 transition-all duration-300">
+    <Card className="p-4 bg-card border border-border hover:border-primary/30 transition-all duration-300">
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-3">
           <div className="text-2xl">{icon}</div>
