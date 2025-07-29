@@ -9,11 +9,17 @@ import {
   History, 
   Settings, 
   Copy,
-  ExternalLink 
+  ExternalLink,
+  CreditCard,
+  Send,
+  QrCode
 } from "lucide-react";
 import SwapInterface from "./SwapInterface";
 import TransactionHistory from "./TransactionHistory";
 import BalanceCard from "./BalanceCard";
+import BuyInterface from "./BuyInterface";
+import SendInterface from "./SendInterface";
+import RequestInterface from "./RequestInterface";
 
 interface WalletDashboardProps {
   walletAddress: string;
@@ -108,10 +114,22 @@ const WalletDashboard = ({ walletAddress, onDisconnect }: WalletDashboardProps) 
           {/* Main Interface */}
           <div className="lg:col-span-2">
             <Tabs defaultValue="swap" className="space-y-6">
-              <TabsList className="grid w-full grid-cols-2">
+              <TabsList className="grid w-full grid-cols-5">
                 <TabsTrigger value="swap" className="flex items-center gap-2">
                   <ArrowUpDown className="w-4 h-4" />
                   Swap
+                </TabsTrigger>
+                <TabsTrigger value="buy" className="flex items-center gap-2">
+                  <CreditCard className="w-4 h-4" />
+                  Buy
+                </TabsTrigger>
+                <TabsTrigger value="send" className="flex items-center gap-2">
+                  <Send className="w-4 h-4" />
+                  Send
+                </TabsTrigger>
+                <TabsTrigger value="request" className="flex items-center gap-2">
+                  <QrCode className="w-4 h-4" />
+                  Request
                 </TabsTrigger>
                 <TabsTrigger value="history" className="flex items-center gap-2">
                   <History className="w-4 h-4" />
@@ -121,6 +139,18 @@ const WalletDashboard = ({ walletAddress, onDisconnect }: WalletDashboardProps) 
 
               <TabsContent value="swap">
                 <SwapInterface />
+              </TabsContent>
+
+              <TabsContent value="buy">
+                <BuyInterface />
+              </TabsContent>
+
+              <TabsContent value="send">
+                <SendInterface />
+              </TabsContent>
+
+              <TabsContent value="request">
+                <RequestInterface />
               </TabsContent>
 
               <TabsContent value="history">

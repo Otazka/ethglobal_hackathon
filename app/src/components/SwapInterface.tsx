@@ -58,6 +58,11 @@ const SwapInterface = () => {
       to: toToken,
       amount: fromAmount
     });
+
+    const fromTokenPrice = getTokenInfo(fromToken).price;
+    const toTokenPrice = getTokenInfo(toToken).price;
+    const estimatedToAmount = (parseFloat(fromAmount) * fromTokenPrice) / toTokenPrice;
+    setToAmount(estimatedToAmount.toFixed(6));
     
     setIsLoading(false);
     // Reset form after successful swap
@@ -154,7 +159,7 @@ const SwapInterface = () => {
             
             <div className="flex items-center justify-between mt-2 text-sm text-muted-foreground">
               <span>{getTokenInfo(fromToken).network}</span>
-              <span>~$0.00</span>
+              <span>{fromAmount ? formatUSD(parseFloat(fromAmount) * getTokenInfo(fromToken).price) : "~$0.00"}</span>
             </div>
           </Card>
         </div>
@@ -198,7 +203,7 @@ const SwapInterface = () => {
             
             <div className="flex items-center justify-between mt-2 text-sm text-muted-foreground">
               <span>{getTokenInfo(toToken).network}</span>
-              <span>~$0.00</span>
+              <span>{toAmount ? formatUSD(parseFloat(toAmount) * getTokenInfo(toToken).price) : "~$0.00"}</span>
             </div>
           </Card>
         </div>
