@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Wallet, ExternalLink } from "lucide-react";
+import { showTelegramAlert, hapticFeedback } from "@/lib/telegram";
 
 declare global {
   interface Window {
@@ -22,6 +23,8 @@ const WalletConnector = ({ onWalletConnect }: WalletConnectorProps) => {
 
   const connectMetaMask = async () => {
     setConnecting(true);
+    hapticFeedback('medium');
+    
     try {
       if (typeof window.ethereum !== 'undefined') {
         const accounts = await window.ethereum.request({
@@ -30,15 +33,25 @@ const WalletConnector = ({ onWalletConnect }: WalletConnectorProps) => {
         
         if (accounts.length > 0) {
           onWalletConnect(accounts[0]);
+          showTelegramAlert("Wallet connected successfully!");
         }
       } else {
-        window.open('https://metamask.io/download.html', '_blank');
+        // Open MetaMask portfolio instead of download page
+        window.open('https://portfolio.metamask.io/', '_blank');
+        showTelegramAlert("Opening MetaMask Portfolio...");
       }
     } catch (error) {
       console.error('Failed to connect wallet:', error);
+      showTelegramAlert("Failed to connect wallet. Please try again.");
     } finally {
       setConnecting(false);
     }
+  };
+
+  const openMetaMaskPortfolio = () => {
+    hapticFeedback('light');
+    window.open('https://portfolio.metamask.io/', '_blank');
+    showTelegramAlert("Opening MetaMask Portfolio...");
   };
 
   return (
@@ -80,10 +93,10 @@ const WalletConnector = ({ onWalletConnect }: WalletConnectorProps) => {
               variant="outline"
               size="lg"
               className="w-full"
-              onClick={() => window.open('https://metamask.io/download.html', '_blank')}
+              onClick={openMetaMaskPortfolio}
             >
               <ExternalLink className="w-4 h-4" />
-              Install MetaMask
+              Open MetaMask Portfolio
             </Button>
           </div>
 
