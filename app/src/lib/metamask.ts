@@ -6,5 +6,4 @@ export const MMSDK = new MetaMaskSDK({
     url: window.location.href,
   },
   injectProvider: true,
-  communicationLayerPreference: 'webrtc', // fallback to iframe on unsupported
 });

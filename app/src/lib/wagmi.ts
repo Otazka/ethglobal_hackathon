@@ -1,16 +1,18 @@
-import { configureChains, createConfig } from 'wagmi';
+import { createConfig } from 'wagmi';
 import { mainnet } from 'wagmi/chains';
-import { publicProvider } from 'wagmi/providers/public';
 import { injected } from 'wagmi/connectors';
+import { createPublicClient, http } from 'viem';
 
 import { MMSDK } from './metamask';
 
 const provider = MMSDK.getProvider();
 
 export const wagmiConfig = createConfig({
-  autoConnect: true,
+  chains: [mainnet],
   connectors: [
     injected({ shimDisconnect: true }),
   ],
-  publicClient: provider,
+  transports: {
+    [mainnet.id]: http(),
+  },
 });

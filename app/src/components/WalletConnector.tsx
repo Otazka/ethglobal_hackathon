@@ -1,3 +1,4 @@
+import React from 'react';
 import { useAccount, useConnect, useDisconnect } from 'wagmi';
 import { injected } from 'wagmi/connectors';
 import { Button } from '@/components/ui/button';
@@ -10,36 +11,41 @@ const isTelegramWebView =
 const platform = window.Telegram?.WebApp?.platform;
 // platform can be 'android', 'ios', 'tdesktop', or 'web'
 
-if (!window.ethereum && isTelegramWebView) {
-  <Button
-  variant="outline"
-  onClick={() => {
-    window.open(window.location.href, '_blank');
-  }}
->
-  Open in Browser
-</Button>
-  window.open(window.location.href, '_blank'); // Opens in system browser
-}
+// Check if we're in Telegram WebView and MetaMask is not available
+const shouldShowBrowserButton = !window.ethereum && isTelegramWebView;
 
 export default function ConnectWallet() {
   const { address, isConnected } = useAccount();
-  const { connect, isLoading } = useConnect({
-    connector: injected(),
-    onError(error) {
-      console.error(error);
-      showTelegramAlert("Failed to connect MetaMask.");
-    },
-    onSuccess(data) {
-      showTelegramAlert(`Connected: ${data.account.slice(0, 6)}...${data.account.slice(-4)}`);
-      hapticFeedback('medium');
-    },
-  });
+  const { connect, isPending } = useConnect();
 
   const { disconnect } = useDisconnect();
 
+  const handleConnect = () => {
+    hapticFeedback('light');
+    connect({ connector: injected() });
+  };
+
+  // Show success/error messages when connection state changes
+  React.useEffect(() => {
+    if (isConnected && address) {
+      showTelegramAlert(`Connected: ${address.slice(0, 6)}...${address.slice(-4)}`);
+      hapticFeedback('medium');
+    }
+  }, [isConnected, address]);
+
   return (
     <div className="flex flex-col items-center space-y-4">
+      {shouldShowBrowserButton && (
+        <Button
+          variant="outline"
+          onClick={() => {
+            window.open(window.location.href, '_blank');
+          }}
+        >
+          Open in Browser
+        </Button>
+      )}
+      
       {isConnected ? (
         <>
           <p className="text-sm font-mono">
@@ -51,13 +57,10 @@ export default function ConnectWallet() {
         </>
       ) : (
         <Button
-          onClick={() => {
-            hapticFeedback('light');
-            connect();
-          }}
-          disabled={isLoading}
+          onClick={handleConnect}
+          disabled={isPending}
         >
-          {isLoading ? 'Connecting...' : 'Connect MetaMask'}
+          {isPending ? 'Connecting...' : 'Connect MetaMask'}
         </Button>
       )}
     </div>
