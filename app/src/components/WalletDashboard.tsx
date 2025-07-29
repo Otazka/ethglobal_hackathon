@@ -20,6 +20,7 @@ import BalanceCard from "./BalanceCard";
 import BuyInterface from "./BuyInterface";
 import SendInterface from "./SendInterface";
 import RequestInterface from "./RequestInterface";
+import SettingsInterface from "./SettingsInterface";
 
 interface WalletDashboardProps {
   walletAddress: string;
@@ -31,6 +32,7 @@ const WalletDashboard = ({ walletAddress, onDisconnect }: WalletDashboardProps) 
     eth: { amount: 2.45, usd: 3920.50 },
     ton: { amount: 125.67, usd: 251.34 }
   });
+  const [showSettings, setShowSettings] = useState(false);
 
   const formatAddress = (address: string) => {
     return `${address.slice(0, 6)}...${address.slice(-4)}`;
@@ -69,7 +71,7 @@ const WalletDashboard = ({ walletAddress, onDisconnect }: WalletDashboardProps) 
             </div>
             
             <div className="flex items-center gap-2">
-              <Button variant="outline" size="sm">
+              <Button variant="outline" size="sm" onClick={() => setShowSettings(true)}>
                 <Settings className="w-4 h-4" />
               </Button>
               <Button variant="outline" size="sm" onClick={onDisconnect}>
@@ -160,6 +162,23 @@ const WalletDashboard = ({ walletAddress, onDisconnect }: WalletDashboardProps) 
           </div>
         </div>
       </div>
+
+      {/* Settings Modal */}
+      {showSettings && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-background border border-border rounded-lg w-full max-w-4xl max-h-[90vh] overflow-y-auto">
+            <div className="sticky top-0 bg-background border-b border-border p-4 flex items-center justify-between">
+              <h2 className="text-xl font-bold">Settings</h2>
+              <Button variant="ghost" size="sm" onClick={() => setShowSettings(false)}>
+                ✕
+              </Button>
+            </div>
+            <div className="p-4">
+              <SettingsInterface />
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
