@@ -14,8 +14,16 @@ import { wagmiConfig } from '@/lib/wagmi';
 const queryClient = new QueryClient();
 
 const App = () => {
+  console.log('🚀 App component rendering...');
+  
   React.useEffect(() => {
-    initializeTelegramApp();
+    try {
+      console.log('📱 Initializing Telegram app...');
+      initializeTelegramApp();
+      console.log('✅ Telegram app initialized successfully');
+    } catch (error) {
+      console.error('❌ Telegram initialization error:', error);
+    }
   }, []);
 
   return (
@@ -26,8 +34,8 @@ const App = () => {
             <div 
               className="min-h-screen"
               style={{ 
-                backgroundColor: 'var(--tg-theme-bg-color, #ffffff)',
-                color: 'var(--tg-theme-text-color, #000000)'
+                backgroundColor: 'var(--tg-theme-bg-color, #1a1a1a)',
+                color: 'var(--tg-theme-text-color, #ffffff)'
               }}
             >
               <Toaster />

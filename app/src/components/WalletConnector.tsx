@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { showTelegramAlert, hapticFeedback } from '@/lib/telegram';
 
 const isTelegramWebView =
+  typeof window !== 'undefined' &&
   typeof window.Telegram !== 'undefined' &&
   window.Telegram.WebApp !== undefined;
 
@@ -12,7 +13,7 @@ const platform = window.Telegram?.WebApp?.platform;
 // platform can be 'android', 'ios', 'tdesktop', or 'web'
 
 // Check if we're in Telegram WebView and MetaMask is not available
-const shouldShowBrowserButton = !window.ethereum && isTelegramWebView;
+const shouldShowBrowserButton = typeof window !== 'undefined' && !window.ethereum && isTelegramWebView;
 
 export default function ConnectWallet() {
   const { address, isConnected } = useAccount();
