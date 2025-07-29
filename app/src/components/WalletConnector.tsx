@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Wallet, ExternalLink } from "lucide-react";
+import { Wallet, ExternalLink, Shield, User } from "lucide-react";
 import { showTelegramAlert, hapticFeedback } from "@/lib/telegram";
 
 declare global {
@@ -10,41 +10,81 @@ declare global {
       request: (args: { method: string; params?: any[] }) => Promise<any>;
       on: (event: string, callback: (...args: any[]) => void) => void;
       removeListener: (event: string, callback: (...args: any[]) => void) => void;
+      selectedAddress?: string;
+      isMetaMask?: boolean;
     };
   }
 }
 
 interface WalletConnectorProps {
-  onWalletConnect: (address: string) => void;
+  onWalletConnect: (address: string, signature?: string) => void;
 }
 
 const WalletConnector = ({ onWalletConnect }: WalletConnectorProps) => {
   const [connecting, setConnecting] = useState(false);
+  const [signing, setSigning] = useState(false);
+  const [connectedAddress, setConnectedAddress] = useState<string | null>(null);
 
   const connectMetaMask = async () => {
     setConnecting(true);
     hapticFeedback('medium');
     
     try {
-      if (typeof window.ethereum !== 'undefined') {
+      if (typeof window.ethereum !== 'undefined' && window.ethereum.isMetaMask) {
+        // Request account access
         const accounts = await window.ethereum.request({
           method: 'eth_requestAccounts'
         });
         
         if (accounts.length > 0) {
-          onWalletConnect(accounts[0]);
-          showTelegramAlert("Wallet connected successfully!");
+          const address = accounts[0];
+          setConnectedAddress(address);
+          showTelegramAlert(`Connected to ${address.slice(0, 6)}...${address.slice(-4)}`);
+          
+          // Now request signature for login
+          await requestSignature(address);
         }
       } else {
-        // Open MetaMask portfolio instead of download page
+        // Open MetaMask portfolio if not installed
         window.open('https://portfolio.metamask.io/', '_blank');
-        showTelegramAlert("Opening MetaMask Portfolio...");
+        showTelegramAlert("Please install MetaMask to login");
       }
     } catch (error) {
       console.error('Failed to connect wallet:', error);
-      showTelegramAlert("Failed to connect wallet. Please try again.");
+      showTelegramAlert("Failed to connect MetaMask. Please try again.");
     } finally {
       setConnecting(false);
+    }
+  };
+
+  const requestSignature = async (address: string) => {
+    setSigning(true);
+    hapticFeedback('light');
+    
+    try {
+      // Create a message for the user to sign
+      const message = `Login to Ether to TON Bridge\n\nTimestamp: ${Date.now()}\nAddress: ${address}`;
+      
+      // Request signature
+      const signature = await window.ethereum!.request({
+        method: 'personal_sign',
+        params: [message, address]
+      });
+      
+      showTelegramAlert("Login successful! Welcome to the bridge.");
+      
+      // Call the parent component with address and signature
+      onWalletConnect(address, signature);
+      
+    } catch (error) {
+      console.error('Failed to sign message:', error);
+      if (error.code === 4001) {
+        showTelegramAlert("Login cancelled by user");
+      } else {
+        showTelegramAlert("Failed to complete login. Please try again.");
+      }
+    } finally {
+      setSigning(false);
     }
   };
 
@@ -52,6 +92,12 @@ const WalletConnector = ({ onWalletConnect }: WalletConnectorProps) => {
     hapticFeedback('light');
     window.open('https://portfolio.metamask.io/', '_blank');
     showTelegramAlert("Opening MetaMask Portfolio...");
+  };
+
+  const disconnectWallet = () => {
+    hapticFeedback('light');
+    setConnectedAddress(null);
+    showTelegramAlert("Wallet disconnected");
   };
 
   return (
@@ -64,44 +110,84 @@ const WalletConnector = ({ onWalletConnect }: WalletConnectorProps) => {
           
           <div className="space-y-2">
             <h1 className="text-2xl font-bold text-foreground">
-              Cross-Chain Wallet
+              Login with MetaMask
             </h1>
             <p className="text-muted-foreground">
-              Connect your wallet to start swapping between Ethereum and TON
+              Connect your MetaMask wallet to access the bridge
             </p>
           </div>
 
-          <div className="space-y-4">
-            <Button
-              onClick={connectMetaMask}
-              disabled={connecting}
-              variant="default"
-              size="lg"
-              className="w-full"
-            >
-              {connecting ? (
-                "Connecting..."
-              ) : (
-                <>
-                  <Wallet className="w-5 h-5" />
-                  Connect MetaMask
-                </>
-              )}
-            </Button>
+          {connectedAddress ? (
+            <div className="space-y-4">
+              <div className="p-4 bg-muted rounded-lg">
+                <div className="flex items-center justify-center space-x-2">
+                  <User className="w-4 h-4" />
+                  <span className="text-sm font-mono">
+                    {connectedAddress.slice(0, 6)}...{connectedAddress.slice(-4)}
+                  </span>
+                </div>
+              </div>
+              
+              <Button
+                onClick={() => requestSignature(connectedAddress)}
+                disabled={signing}
+                variant="default"
+                size="lg"
+                className="w-full"
+              >
+                {signing ? (
+                  "Signing..."
+                ) : (
+                  <>
+                    <Shield className="w-5 h-5 mr-2" />
+                    Sign to Login
+                  </>
+                )}
+              </Button>
 
-            <Button
-              variant="outline"
-              size="lg"
-              className="w-full"
-              onClick={openMetaMaskPortfolio}
-            >
-              <ExternalLink className="w-4 h-4" />
-              Open MetaMask Portfolio
-            </Button>
-          </div>
+              <Button
+                variant="outline"
+                size="lg"
+                className="w-full"
+                onClick={disconnectWallet}
+              >
+                Disconnect Wallet
+              </Button>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              <Button
+                onClick={connectMetaMask}
+                disabled={connecting}
+                variant="default"
+                size="lg"
+                className="w-full"
+              >
+                {connecting ? (
+                  "Connecting..."
+                ) : (
+                  <>
+                    <Wallet className="w-5 h-5 mr-2" />
+                    Connect MetaMask
+                  </>
+                )}
+              </Button>
 
-          <div className="text-xs text-muted-foreground">
-            Powered by 1inch Fusion+ Cross-chain Technology
+              <Button
+                variant="outline"
+                size="lg"
+                className="w-full"
+                onClick={openMetaMaskPortfolio}
+              >
+                <ExternalLink className="w-4 h-4 mr-2" />
+                Open MetaMask Portfolio
+              </Button>
+            </div>
+          )}
+
+          <div className="text-xs text-muted-foreground space-y-2">
+            <div>🔐 Secure login with MetaMask signature</div>
+            <div>Powered by 1inch Fusion+ Cross-chain Technology</div>
           </div>
         </div>
       </Card>
