@@ -3,6 +3,25 @@ import { injected } from 'wagmi/connectors';
 import { Button } from '@/components/ui/button';
 import { showTelegramAlert, hapticFeedback } from '@/lib/telegram';
 
+const isTelegramWebView =
+  typeof window.Telegram !== 'undefined' &&
+  window.Telegram.WebApp !== undefined;
+
+const platform = window.Telegram?.WebApp?.platform;
+// platform can be 'android', 'ios', 'tdesktop', or 'web'
+
+if (!window.ethereum && isTelegramWebView) {
+  <Button
+  variant="outline"
+  onClick={() => {
+    window.open(window.location.href, '_blank');
+  }}
+>
+  Open in Browser
+</Button>
+  window.open(window.location.href, '_blank'); // Opens in system browser
+}
+
 export default function ConnectWallet() {
   const { address, isConnected } = useAccount();
   const { connect, isLoading } = useConnect({
