@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Wallet, ExternalLink, Shield, User } from "lucide-react";
@@ -24,30 +24,32 @@ const WalletConnector = ({ onWalletConnect }: WalletConnectorProps) => {
   const [connecting, setConnecting] = useState(false);
   const [signing, setSigning] = useState(false);
   const [connectedAddress, setConnectedAddress] = useState<string | null>(null);
+  const [isMetaMaskAvailable, setIsMetaMaskAvailable] = useState<boolean>(false);
+
+  useEffect(() => {
+    setIsMetaMaskAvailable(
+      typeof window.ethereum !== "undefined" && window.ethereum.isMetaMask === true
+    );
+  }, []);
 
   const connectMetaMask = async () => {
     setConnecting(true);
     hapticFeedback('medium');
-    
+
     try {
-      if (typeof window.ethereum !== 'undefined' && window.ethereum.isMetaMask) {
-        // Request account access
+      if (isMetaMaskAvailable && window.ethereum) {
         const accounts = await window.ethereum.request({
           method: 'eth_requestAccounts'
         });
-        
+
         if (accounts.length > 0) {
           const address = accounts[0];
           setConnectedAddress(address);
           showTelegramAlert(`Connected to ${address.slice(0, 6)}...${address.slice(-4)}`);
-          
-          // Now request signature for login
           await requestSignature(address);
         }
       } else {
-        // Open MetaMask portfolio if not installed
-        window.open('https://portfolio.metamask.io/', '_blank');
-        showTelegramAlert("Please install MetaMask to login");
+        showTelegramAlert("MetaMask not detected. Please install MetaMask.");
       }
     } catch (error) {
       console.error('Failed to connect wallet:', error);
@@ -86,12 +88,6 @@ const WalletConnector = ({ onWalletConnect }: WalletConnectorProps) => {
     } finally {
       setSigning(false);
     }
-  };
-
-  const openMetaMaskPortfolio = () => {
-    hapticFeedback('light');
-    window.open('https://portfolio.metamask.io/', '_blank');
-    showTelegramAlert("Opening MetaMask Portfolio...");
   };
 
   const disconnectWallet = () => {
@@ -173,15 +169,21 @@ const WalletConnector = ({ onWalletConnect }: WalletConnectorProps) => {
                 )}
               </Button>
 
-              <Button
-                variant="outline"
-                size="lg"
-                className="w-full"
-                onClick={openMetaMaskPortfolio}
-              >
-                <ExternalLink className="w-4 h-4 mr-2" />
-                Open MetaMask Portfolio
-              </Button>
+              {!isMetaMaskAvailable && (
+                <Button
+                  variant="outline"
+                  size="lg"
+                  className="w-full"
+                  onClick={() => {
+                    hapticFeedback('light');
+                    window.open('https://metamask.io/download.html', '_blank');
+                    showTelegramAlert("Redirecting to MetaMask download page...");
+                  }}
+                >
+                  <ExternalLink className="w-4 h-4 mr-2" />
+                  Install MetaMask
+                </Button>
+              )}
             </div>
           )}
 
