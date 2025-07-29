@@ -3,6 +3,7 @@ import logging
 from aiogram import Bot, Dispatcher, types
 from aiogram.utils import executor
 from dotenv import load_dotenv
+from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 
 # Load environment variables from .env file
 load_dotenv()
@@ -23,6 +24,14 @@ dp = Dispatcher(bot)
 @dp.message_handler(commands=['start'])
 async def start_command(message: types.Message):
     await message.reply("Hello, I'm your bot 🤖")
+
+keyboard = InlineKeyboardMarkup().add(
+    InlineKeyboardButton(
+        text="Launch Mini App",
+        web_app=WebAppInfo(url=https://fusionswap.jaar.it/)
+    )
+)
+await message.answer("Click to launch the Mini App:", reply_markup=keyboard)
 
 def main():
     executor.start_polling(dp, skip_updates=True)
