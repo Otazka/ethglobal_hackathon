@@ -1,6 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { showTelegramAlert } from '@/lib/telegram';
-import { useSignMessage } from 'wagmi';
 interface User {
   address: string;
   signature?: string;
@@ -77,13 +76,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     logout,
     loading
   };
-  
-  const { signMessage } = useSignMessage({
-    message: 'Login to Telegram dApp - ' + Date.now(),
-    onSuccess(signature) {
-      // Send to backend for verification
-    },
-  });
 
   return (
     <AuthContext.Provider value={value}>
