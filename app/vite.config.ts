@@ -21,7 +21,7 @@ export default defineConfig(({ mode }) => ({
   },
   build: {
     // Optimize for Telegram Mini App
-    target: 'es2015',
+    target: 'es2020',
     minify: 'terser',
     rollupOptions: {
       output: {
