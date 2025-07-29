@@ -22,7 +22,7 @@ dp = Dispatcher(bot)
 
 @dp.message_handler(commands=['start'])
 async def start_command(message: types.Message):
-    await message.reply("Привет! Я ваш бот 🤖")
+    await message.reply("Hello, I'm your bot 🤖")
 
 def main():
     executor.start_polling(dp, skip_updates=True)
