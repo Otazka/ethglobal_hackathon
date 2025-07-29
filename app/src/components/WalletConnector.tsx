@@ -27,9 +27,28 @@ const WalletConnector = ({ onWalletConnect }: WalletConnectorProps) => {
   const [isMetaMaskAvailable, setIsMetaMaskAvailable] = useState<boolean>(false);
 
   useEffect(() => {
-    setIsMetaMaskAvailable(
-      typeof window.ethereum !== "undefined" && window.ethereum.isMetaMask === true
-    );
+    const checkMetaMaskAvailability = async () => {
+      const { ethereum } = window;
+      if (ethereum && ethereum.isMetaMask) {
+        try {
+          // Prefer isConnected() if available, otherwise fallback to eth_accounts
+          let isConnected = false;
+          if (typeof ethereum.isConnected === "function") {
+            isConnected = ethereum.isConnected();
+          } else {
+            const accounts = await ethereum.request({ method: 'eth_accounts' });
+            isConnected = accounts.length > 0;
+          }
+          setIsMetaMaskAvailable(isConnected || ethereum.isMetaMask);
+        } catch {
+          setIsMetaMaskAvailable(false);
+        }
+      } else {
+        setIsMetaMaskAvailable(false);
+      }
+    };
+
+    checkMetaMaskAvailability();
   }, []);
 
   const connectMetaMask = async () => {
