@@ -32,7 +32,9 @@ export const getMetaMaskProvider = () => {
 
 // Check if MetaMask is installed
 export const isMetaMaskInstalled = () => {
-  return typeof window !== 'undefined' && window.ethereum !== undefined;
+  return typeof window !== "undefined" &&
+         typeof window.ethereum !== "undefined" &&
+         window.ethereum.isMetaMask === true;
 };
 
 // Check if MetaMask is connected

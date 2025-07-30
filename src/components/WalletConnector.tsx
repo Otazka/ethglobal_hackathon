@@ -33,6 +33,7 @@ useEffect(() => {
   };
 
   window.addEventListener("ethereum#initialized", handleEthereum);
+  setTimeout(checkInstallation, 1000);
   return () => window.removeEventListener("ethereum#initialized", handleEthereum);
 }, []);
 
