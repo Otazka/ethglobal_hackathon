@@ -1,8 +1,13 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Wallet, ExternalLink } from "lucide-react";
-import { getMetaMaskProvider } from "@/lib/metamask";
+import { Wallet, ExternalLink, AlertCircle } from "lucide-react";
+import { 
+  getMetaMaskProvider, 
+  isMetaMaskInstalled, 
+  isMetaMaskConnected,
+  getCurrentAccount 
+} from "@/lib/metamask";
 
 interface WalletConnectorProps {
   onWalletConnect: (address: string) => void;
@@ -10,26 +15,103 @@ interface WalletConnectorProps {
 
 const WalletConnector = ({ onWalletConnect }: WalletConnectorProps) => {
   const [connecting, setConnecting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [isInstalled, setIsInstalled] = useState<boolean | null>(null);
+
+  // Check if MetaMask is installed on component mount
+  useEffect(() => {
+    const checkInstallation = () => {
+      const installed = isMetaMaskInstalled();
+      setIsInstalled(installed);
+      console.log('MetaMask installed:', installed);
+    };
+
+    checkInstallation();
+    
+    // Listen for MetaMask installation
+    const handleEthereum = () => {
+      checkInstallation();
+    };
+
+    window.addEventListener('ethereum#initialized', handleEthereum);
+    return () => window.removeEventListener('ethereum#initialized', handleEthereum);
+  }, []);
 
   const connectMetaMask = async () => {
     setConnecting(true);
+    setError(null);
+    
     try {
+      console.log('Attempting to connect to MetaMask...');
+      
       const provider = getMetaMaskProvider();
-      if (provider) {
-        const accounts = await provider.request({
-          method: 'eth_requestAccounts'
-        });
-        if (accounts.length > 0) {
-          onWalletConnect(accounts[0]);
-        }
-      } else {
-        window.open('https://metamask.io/download.html', '_blank');
+      console.log('MetaMask provider:', provider);
+      
+      if (!provider) {
+        const errorMsg = 'MetaMask is not detected. Please install MetaMask and refresh the page.';
+        console.error(errorMsg);
+        setError(errorMsg);
+        return;
       }
-    } catch (error) {
+
+      // Check if provider has request method
+      if (typeof provider.request !== 'function') {
+        const errorMsg = 'MetaMask provider does not have a request method. SDK may not be initialized correctly.';
+        console.error(errorMsg);
+        setError(errorMsg);
+        return;
+      }
+
+      // Check if already connected
+      const connected = await isMetaMaskConnected();
+      console.log('Already connected:', connected);
+      
+      if (connected) {
+        const account = await getCurrentAccount();
+        if (account) {
+          console.log('Using existing connection:', account);
+          onWalletConnect(account);
+          return;
+        }
+      }
+
+      // Request accounts
+      console.log('Requesting accounts...');
+      const accounts = await provider.request({
+        method: 'eth_requestAccounts'
+      });
+      
+      console.log('MetaMask accounts:', accounts);
+      
+      if (accounts && accounts.length > 0) {
+        console.log('Successfully connected:', accounts[0]);
+        onWalletConnect(accounts[0]);
+      } else {
+        const errorMsg = 'No accounts found. Please unlock MetaMask and try again.';
+        console.error(errorMsg);
+        setError(errorMsg);
+      }
+    } catch (error: any) {
       console.error('Failed to connect wallet:', error);
+      
+      let errorMessage = 'Failed to connect to MetaMask.';
+      
+      if (error.code === 4001) {
+        errorMessage = 'Connection rejected by user.';
+      } else if (error.code === -32002) {
+        errorMessage = 'Please check MetaMask - connection request is pending.';
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+      
+      setError(errorMessage);
     } finally {
       setConnecting(false);
     }
+  };
+
+  const handleInstallMetaMask = () => {
+    window.open('https://metamask.io/download.html', '_blank');
   };
 
   return (
@@ -39,6 +121,7 @@ const WalletConnector = ({ onWalletConnect }: WalletConnectorProps) => {
           <div className="w-16 h-16 mx-auto bg-primary rounded-full flex items-center justify-center">
             <Wallet className="w-8 h-8 text-primary-foreground" />
           </div>
+          
           <div className="space-y-2">
             <h1 className="text-2xl font-bold text-foreground">
               Cross-Chain Wallet
@@ -47,10 +130,20 @@ const WalletConnector = ({ onWalletConnect }: WalletConnectorProps) => {
               Connect your wallet to start swapping between Ethereum and TON
             </p>
           </div>
+
+          {error && (
+            <div className="p-4 bg-destructive/10 border border-destructive/20 rounded-lg">
+              <div className="flex items-center gap-2 text-destructive">
+                <AlertCircle className="w-4 h-4" />
+                <span className="text-sm">{error}</span>
+              </div>
+            </div>
+          )}
+
           <div className="space-y-4">
             <Button
               onClick={connectMetaMask}
-              disabled={connecting}
+              disabled={connecting || isInstalled === false}
               variant="default"
               size="lg"
               className="w-full"
@@ -64,16 +157,20 @@ const WalletConnector = ({ onWalletConnect }: WalletConnectorProps) => {
                 </>
               )}
             </Button>
-            <Button
-              variant="outline"
-              size="lg"
-              className="w-full"
-              onClick={() => window.open('https://metamask.io/download.html', '_blank')}
-            >
-              <ExternalLink className="w-4 h-4" />
-              Install MetaMask
-            </Button>
+            
+            {isInstalled === false && (
+              <Button
+                variant="outline"
+                size="lg"
+                className="w-full"
+                onClick={handleInstallMetaMask}
+              >
+                <ExternalLink className="w-4 h-4" />
+                Install MetaMask
+              </Button>
+            )}
           </div>
+          
           <div className="text-xs text-muted-foreground">
             Powered by MetaMask SDK
           </div>
@@ -83,4 +180,5 @@ const WalletConnector = ({ onWalletConnect }: WalletConnectorProps) => {
   );
 };
 
+export default WalletConnector;
 export default WalletConnector;
