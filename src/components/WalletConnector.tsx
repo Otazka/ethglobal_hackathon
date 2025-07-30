@@ -18,15 +18,38 @@ const WalletConnector = ({ onWalletConnect }: WalletConnectorProps) => {
   const [error, setError] = useState<string | null>(null);
   const [isInstalled, setIsInstalled] = useState<boolean | null>(null);
 
-  // Check if MetaMask is installed on component mount
-  useEffect(() => {
-    const checkInstallation = () => {
-      const installed = isMetaMaskInstalled();
-      setIsInstalled(installed);
-      console.log('MetaMask installed:', installed);
-    };
+// Runs once to check installation and listen for MetaMask init
+useEffect(() => {
+  const checkInstallation = () => {
+    const installed = isMetaMaskInstalled();
+    setIsInstalled(installed);
+    console.log("MetaMask installed:", installed);
+  };
 
+  checkInstallation();
+
+  const handleEthereum = () => {
     checkInstallation();
+  };
+
+  window.addEventListener("ethereum#initialized", handleEthereum);
+  return () => window.removeEventListener("ethereum#initialized", handleEthereum);
+}, []);
+
+// Runs once to listen for account changes
+useEffect(() => {
+  const provider = getMetaMaskProvider();
+  if (!provider) return;
+
+  const handleChainChanged = (_chainId: string) => {
+    window.location.reload(); // Or trigger state update
+  };
+
+  provider.on("chainChanged", handleChainChanged);
+  return () => {
+    provider.removeListener("chainChanged", handleChainChanged);
+  };
+}, []);
     
     // Listen for MetaMask installation
     const handleEthereum = () => {
@@ -69,7 +92,6 @@ const WalletConnector = ({ onWalletConnect }: WalletConnectorProps) => {
       if (connected) {
         const account = await getCurrentAccount();
         if (account) {
-          console.log('Using existing connection:', account);
           onWalletConnect(account);
           return;
         }
@@ -180,5 +202,4 @@ const WalletConnector = ({ onWalletConnect }: WalletConnectorProps) => {
   );
 };
 
-export default WalletConnector;
 export default WalletConnector;
