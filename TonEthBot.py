@@ -4,11 +4,13 @@ from dotenv import load_dotenv
 from aiogram import Bot, Dispatcher, types
 from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardMarkup, InlineKeyboardButton
 from aiogram.filters import Command
+from inchApi import get_eth_to_usdt_quote
 
 # Load environment variables
 load_dotenv()
 
 API_TOKEN = os.getenv('TELEGRAM_BOT_TOKEN')
+ONEINCH_API_KEY = os.getenv('ONE_INCH_API_KEY')
 
 bot = Bot(token=API_TOKEN)
 dp = Dispatcher()
@@ -20,7 +22,7 @@ user_languages = {}  # Store user language preferences
 # Language texts
 TEXTS = {
     'EN': {
-        'welcome': "🚀 Hello! I'm a crypto bot for ETH and TON transfers.\n\nHere's what I can do:\n💰 /wallet – show your wallet\n📤 /send – send funds\n📥 /receive – show address for receiving\n🔄 /swap – currency exchange (in development)\n🌐 /language – change language",
+        'welcome': "🚀 Hello! I'm a crypto bot for ETH and TON transfers.\n\nHere's what I can do:\n💰 /wallet – show your wallet\n💱 /rate <amount> – get ETH to USDT rate\n📤 /send – send funds\n📥 /receive – show address for receiving\n🔄 /swap – currency exchange (in development)\n🌐 /language – change language",
         'wallet_info': "💼 Your addresses:\n🔷 ETH: {eth}\n💎 TON: {ton}\n\n💰 Balance:\n🔷 ETH: {eth_balance}\n💎 TON: {ton_balance}",
         'no_wallet': "❌ You don't have a wallet yet. Write /start",
         'receive_info': "📥 To receive funds, transfer to address:\n\n🔷 ETH: {eth}\n💎 TON: {ton}",
@@ -31,7 +33,7 @@ TEXTS = {
         'select_language': "🌐 Please select your language:"
     },
     'UA': {
-        'welcome': "🚀 Привіт! Я крипто-бот для допомоги з переводами ETH і TON.\n\nОсь що я вмію:\n💰 /wallet – показати ваш гаманець\n📤 /send – відправити кошти\n📥 /receive – показати адресу для отримання\n🔄 /swap – обмін валюти (в розробці)\n🌐 /language – змінити мову",
+        'welcome': "🚀 Привіт! Я крипто-бот для допомоги з переводами ETH і TON.\n\nОсь що я вмію:\n💰 /wallet – показати ваш гаманець\n💱 /rate <amount> – отримати курс ETH до USDT\n📤 /send – відправити кошти\n📥 /receive – показати адресу для отримання\n🔄 /swap – обмін валюти (в розробці)\n🌐 /language – змінити мову",
         'wallet_info': "💼 Ваші адреси:\n🔷 ETH: {eth}\n💎 TON: {ton}\n\n💰 Баланс:\n🔷 ETH: {eth_balance}\n💎 TON: {ton_balance}",
         'no_wallet': "❌ У вас ще немає гаманця. Напишіть /start",
         'receive_info': "📥 Для отримання коштів переведіть на адресу:\n\n🔷 ETH: {eth}\n💎 TON: {ton}",
@@ -42,7 +44,7 @@ TEXTS = {
         'select_language': "🌐 Будь ласка, виберіть вашу мову:"
     },
     'RU': {
-        'welcome': "🚀 Привет! Я крипто-бот для помощи с переводами ETH и TON.\n\nВот что я умею:\n💰 /wallet – показать ваш кошелёк\n📤 /send – отправить средства\n📥 /receive – показать адрес для получения\n🔄 /swap – обмен валюты (в разработке)\n🌐 /language – изменить язык",
+        'welcome': "🚀 Привет! Я крипто-бот для помощи с переводами ETH и TON.\n\nВот что я умею:\n💰 /wallet – показать ваш кошелёк\n💱 /rate <amount> – получить курс ETH к USDT\n📤 /send – отправить средства\n📥 /receive – показать адрес для получения\n🔄 /swap – обмен валюты (в разработке)\n🌐 /language – изменить язык",
         'wallet_info': "💼 Ваши адреса:\n🔷 ETH: {eth}\n💎 TON: {ton}\n\n💰 Баланс:\n🔷 ETH: {eth_balance}\n💎 TON: {ton_balance}",
         'no_wallet': "❌ У вас ещё нет кошелька. Напишите /start",
         'receive_info': "📥 Для получения переведите средства на адрес:\n\n🔷 ETH: {eth}\n💎 TON: {ton}",
@@ -85,6 +87,17 @@ async def wallet_cmd(message: types.Message):
     else:
         reply = get_text(user_id, 'no_wallet')
     await message.reply(reply)
+
+@dp.message(Command("rate"))
+async def get_rate_cmd(message: types.Message):
+    try:
+        amount = float(message.text.split()[1])
+        rate = get_eth_to_usdt_quote(amount)
+        await message.reply(f"💱 Exchange Rate:\n1 ETH = {rate} USDT\nFor {amount} ETH: {amount * rate:.2f} USDT")
+    except (ValueError, IndexError):
+        await message.reply("Please use the format: /rate <amount>\nExample: /rate 1")
+    except Exception as e:
+        await message.reply(f"❌ Error getting rate: {str(e)}\nPlease try again later.")
 
 @dp.message(Command("receive"))
 async def receive_cmd(message: types.Message):
